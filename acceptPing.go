@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/MrmaderatorYT/CyberCore/config"
+	"CyberCore/config"
 	"github.com/Tnze/go-mc/chat"
 	"github.com/Tnze/go-mc/net"
 	"github.com/Tnze/go-mc/net/packet"
 	"github.com/google/uuid"
+	_ "io/ioutil"
 )
 
 // Получаем пинг-подкючение(PingList)
@@ -66,13 +67,23 @@ func listResp() string {
 	list.Version.Name = "ULE #1"
 	list.Version.Protocol = int(config.ProtocolVersion)
 	list.Players.Max = 100
-	list.Players.Online = 5
+	list.Players.Online = -1
 	list.Players.Sample = []listRespPlayer{{
 		Name: "Пример игрока :)",
 		ID:   uuid.UUID{},
 	}}
 	list.Description = config.MOTD
 
+	// Добавляем иконку сервера, если она есть
+	faviconPath := config.GetFaviconPath()
+	if faviconPath != "" {
+		faviconBase64, err := config.GetFaviconBase64(faviconPath)
+		if err == nil {
+			list.FavIcon = "data:image/png;base64," + faviconBase64
+		} else {
+			log.Printf("Ошибка получения иконки сервера: %v", err)
+		}
+	}
 	// Превращаем структуру в JSON байты
 	data, err := json.Marshal(list)
 	if err != nil {
